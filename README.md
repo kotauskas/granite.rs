@@ -15,6 +15,14 @@ Enter arena-allocated data structures: a way to have data structures backed by `
 
 Unlike smart pointer data structures, arena allocated data structures do not store any pointers. Instead, they store keys. A key is an identifier of an element within the backing storage, unique in the scope of one instance of the backing storage. Keys may overlap between multiple storages and between an element which existed at some point but has been removed, but they may not overlap among elements coexisting in one point of time in one collection.
 
+## Public dependencies
+- `arrayvec` — `^0.5`
+- `smallvec` — `^1.4`
+- `slab` — `^0.4`
+- `slotmap` — `^0.4`
+
+PRs are welcome from those interested in those version numbers being modified.
+
 ## Feature flags
 - `alloc` (**enabled by default**) — enables support for [`Vec`] and [`VecDeque`] from the standard library, while keeping the crate `no_std`. Requires a functional global allocator.
 - `arrayvec` (**enabled by default**) — enables support for [`ArrayVec`].
@@ -26,6 +34,8 @@ Unlike smart pointer data structures, arena allocated data structures do not sto
 [`VecDeque`]: https://doc.rust-lang.org/std/collections/struct.VecDeque.html " "
 [`SmallVec`]: https://docs.rs/smallvec/*/smallvec/struct.SmallVec.html " "
 [`ArrayVec`]: https://docs.rs/arrayvec/*/arrayvec/struct.ArrayVec.html " "
+[`SlotMap`]: https://docs.rs/slotmap/*/slotmap/struct.SlotMap.html " "
+[`Slab`]: https://docs.rs/slab/0.4.2/slab/struct.Slab.html " "
 [`LinkedList`]: https://doc.rust-lang.org/std/collections/struct.LinkedList.html " "
 [`Rc`]: https://doc.rust-lang.org/std/rc/struct.Rc.html " "
 [`Arc`]: https://doc.rust-lang.org/std/sync/struct.Arc.html " "
