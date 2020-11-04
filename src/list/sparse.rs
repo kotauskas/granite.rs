@@ -28,7 +28,7 @@ pub type VecDeque<T> = SparseStorage<T, alloc::collections::VecDeque<Slot<T>>>;
 ///
 /// # Example
 /// ```rust
-/// use granite::storage::{
+/// use granite::{
 ///     ListStorage, // ListStorage trait, for interfacing with the sparse
 ///                  // storage's generic list-like storage capabilities
 ///     SparseVec, // A sparse storage type definition for Vec
