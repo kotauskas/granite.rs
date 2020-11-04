@@ -104,7 +104,7 @@
 #![allow(clippy::use_self)] // Broken
 
 #![no_std]
-#![cfg_attr(feature = "cfg_doc", feature(cfg_doc))]
+#![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
