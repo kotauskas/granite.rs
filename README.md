@@ -28,15 +28,19 @@ PRs are welcome from those interested in those version numbers being modified.
 - `arrayvec` — enables support for [`ArrayVec`].
 - `smallvec` — enables support for [`SmallVec`].
 - `slab` — enables support for [`Slab`].
-- `slotmap` — enables support for [`SlotMap`]. [`Slab`] will likely be faster because it's not versioned, so this is disabled by default.
+- `slotmap` — enables support for [`SlotMap`], [`HopSlotMap`] and [`DenseSlotMap`]. [`Slab`] will likely be faster because it's not versioned, so this is disabled by default.
+- `union_optimizations` — forwarded to Granite, adds some layout optimizations by using untagged unions, decreasing memory usage in `SparseStorage`. **Requires a nightly compiler** (see [tracking issue for RFC 2514]) and thus is disabled by default.
 
 [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html " "
 [`VecDeque`]: https://doc.rust-lang.org/std/collections/struct.VecDeque.html " "
 [`SmallVec`]: https://docs.rs/smallvec/*/smallvec/struct.SmallVec.html " "
 [`ArrayVec`]: https://docs.rs/arrayvec/*/arrayvec/struct.ArrayVec.html " "
 [`SlotMap`]: https://docs.rs/slotmap/*/slotmap/struct.SlotMap.html " "
-[`Slab`]: https://docs.rs/slab/0.4.2/slab/struct.Slab.html " "
+[`HopSlotMap`]: https://docs.rs/slotmap/*/slotmap/hop/struct.HopSlotMap.html " "
+[`DenseSlotMap`]: https://docs.rs/slotmap/*/slotmap/dense/struct.DenseSlotMap.html " "
+[`Slab`]: https://docs.rs/slab/*/slab/struct.Slab.html " "
 [`LinkedList`]: https://doc.rust-lang.org/std/collections/struct.LinkedList.html " "
 [`Rc`]: https://doc.rust-lang.org/std/rc/struct.Rc.html " "
 [`Arc`]: https://doc.rust-lang.org/std/sync/struct.Arc.html " "
 [DAG]: https://en.wikipedia.org/wiki/Directed_acyclic_graph " "
+[tracking issue for RFC 2514]: https://github.com/rust-lang/rust/issues/55149 " "
