@@ -24,10 +24,10 @@ Unlike smart pointer data structures, arena allocated data structures do not sto
 PRs are welcome from those interested in those version numbers being modified.
 
 ## Feature flags
-- `alloc` (**enabled by default**) — enables support for [`Vec`] and [`VecDeque`] from the standard library, while keeping the crate `no_std`. Requires a functional global allocator.
-- `arrayvec` (**enabled by default**) — enables support for [`ArrayVec`].
-- `smallvec` (**enabled by default**) — enables support for [`SmallVec`].
-- `slab` (**enabled by default**) — enables support for [`Slab`].
+- `alloc` (**enabled by default**) — enables support for [`Vec`] and [`VecDeque`] from the standard library, while keeping the crate `no_std`. Requires a functional global allocator, though only at runtime and not at compile time.
+- `arrayvec` — enables support for [`ArrayVec`].
+- `smallvec` — enables support for [`SmallVec`].
+- `slab` — enables support for [`Slab`].
 - `slotmap` — enables support for [`SlotMap`]. [`Slab`] will likely be faster because it's not versioned, so this is disabled by default.
 
 [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html " "

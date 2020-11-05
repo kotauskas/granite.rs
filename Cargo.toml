@@ -1,6 +1,6 @@
 [package]
 name = "granite"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Kotauskas <v.toncharov@gmail.com>"]
 edition = "2018"
 
@@ -24,11 +24,6 @@ slotmap = {version = "0.4", optional = true}
 [features]
 default = [
     "alloc",
-    
-    "arrayvec",
-    "smallvec",
-    "slab",
-    "slotmap",
 ]
 alloc = []
 
