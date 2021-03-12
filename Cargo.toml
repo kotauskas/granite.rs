@@ -16,15 +16,13 @@ keywords = ["storage", "sparse_storage"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arrayvec = {version = "0.5", optional = true, default_features = false}
-smallvec = {version = "1.4", optional = true}
-slab = {version = "0.4", optional = true}
-slotmap = {version = "0.4", optional = true}
+arrayvec = { version = "0.5", optional = true, default_features = false }
+smallvec = { version = "1.4", optional = true }
+slab = { version = "0.4", optional = true }
+slotmap = { version = "0.4", optional = true }
 
 [features]
-default = [
-    "alloc",
-]
+default = ["alloc"]
 alloc = []
 
 union_optimizations = []
@@ -33,12 +31,10 @@ doc_cfg = []
 [package.metadata.docs.rs]
 features = [
     "alloc",
-
     "arrayvec",
     "smallvec",
     "slab",
     "slotmap",
-
     "union_optimizations",
     "doc_cfg",
 ]
