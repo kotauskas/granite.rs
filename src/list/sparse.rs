@@ -1,10 +1,4 @@
-use core::{
-    fmt::Debug,
-    ptr,
-    mem,
-    num::NonZeroUsize,
-    hint,
-};
+use core::{fmt::Debug, ptr, mem, num::NonZeroUsize, hint};
 use super::{ListStorage, MoveFix};
 
 /// A `Vec` wrapped in [`SparseStorage`].
@@ -84,14 +78,16 @@ pub type VecDeque<T> = SparseStorage<T, alloc::collections::VecDeque<Slot<T>>>;
 /// ```
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub struct SparseStorage<E, S>
-where S: ListStorage<Element = Slot<E>>,
+where
+    S: ListStorage<Element = Slot<E>>,
 {
     storage: S,
     /// Length, first element, last element
     hole_list: Option<(NonZeroUsize, usize, usize)>,
 }
 impl<E, S> SparseStorage<E, S>
-where S: ListStorage<Element = Slot<E>>,
+where
+    S: ListStorage<Element = Slot<E>>,
 {
     /// Removes all holes from the sparse storage, *without fixing elements' indicies*. **This is an expensive operation and should only be called if `is_dense` is `false` to avoid needless overhead.**
     #[inline(always)]
@@ -101,7 +97,9 @@ where S: ListStorage<Element = Slot<E>>,
     /// Removes all holes from the sparse storage, fixing elements' indicies. **This is an expensive operation and should only be called if `is_dense` is `false` to avoid needless overhead.**
     #[inline(always)]
     pub fn defragment_and_fix(&mut self)
-    where E: MoveFix {
+    where
+        E: MoveFix,
+    {
         self.defragment_impl(|s, i, j| {
             unsafe {
                 // SAFETY: we just swapped those elements
@@ -332,7 +330,8 @@ defragment before doing this"
         self.storage.truncate(len)
     }
     fn insert_and_shiftfix(&mut self, index: usize, element: Self::Element)
-    where Self::Element: MoveFix,
+    where
+        Self::Element: MoveFix,
     {
         // We are not using holes here since the hole list isn't doubly linked and we might end up
         // pointing to an element
@@ -345,7 +344,8 @@ defragment before doing this"
     #[inline]
     #[track_caller]
     fn remove_and_shiftfix(&mut self, index: usize) -> Self::Element
-    where Self::Element: MoveFix,
+    where
+        Self::Element: MoveFix,
     {
         assert!(self.len() > index, "index out of bounds");
         unsafe {
@@ -538,7 +538,9 @@ impl<T> SlotUnionBased<T> {
     const fn new_element(val: T) -> Self {
         Self {
             discrim: Self::ELEMENT_DISCRIM_BIT,
-            data: SlotUnion { element: mem::ManuallyDrop::new(val) },
+            data: SlotUnion {
+                element: mem::ManuallyDrop::new(val),
+            },
         }
     }
     // Uncomment if ever needed
@@ -621,17 +623,13 @@ impl<T: Debug> Debug for SlotUnionBased<T> {
                 // SAFETY: we just did a discriminant check
                 self.element()
             };
-            f.debug_tuple("Element")
-                .field(element_ref)
-                .finish()
+            f.debug_tuple("Element").field(element_ref).finish()
         } else {
             let hole_link = unsafe {
                 // SAFETY: as above
                 self.hole_link()
             };
-            f.debug_tuple("Hole")
-                .field(&hole_link)
-                .finish()
+            f.debug_tuple("Hole").field(&hole_link).finish()
         }
     }
 }

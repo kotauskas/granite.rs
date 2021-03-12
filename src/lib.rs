@@ -111,12 +111,8 @@
     clippy::verbose_file_reads,
     clippy::wrong_pub_self_convention,
 )]
-#![deny(
-    anonymous_parameters,
-    bare_trait_objects,
-)]
+#![deny(anonymous_parameters, bare_trait_objects)]
 #![allow(clippy::use_self)] // Broken
-
 #![no_std]
 #![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 
@@ -279,6 +275,7 @@ type _DefaultStorage<T> = arrayvec::ArrayVec<[T; 0]>;
     not(feature = "alloc"),
     not(feature = "smallvec"),
 ))]
-compile_error!("\
+compile_error!(
+    "\
 cannot pick default storage, please choose at least one type of storage to be the default"
 );

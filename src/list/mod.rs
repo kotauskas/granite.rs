@@ -6,15 +6,9 @@ mod arrayvec_impl;
 mod smallvec_impl;
 
 mod sparse;
-pub use sparse::{
-    SparseStorage,
-    Slot as SparseStorageSlot,
-};
+pub use sparse::{SparseStorage, Slot as SparseStorageSlot};
 #[cfg(feature = "alloc")]
-pub use sparse::{
-    Vec as SparseVec,
-    VecDeque as SparseVecDeque,
-};
+pub use sparse::{Vec as SparseVec, VecDeque as SparseVecDeque};
 
 use core::{
     num::{NonZeroUsize, NonZeroIsize},
@@ -167,7 +161,8 @@ pub unsafe trait ListStorage: Sized {
     /// [`MoveFix`]: trait.MoveFix.html " "
     #[inline]
     fn insert_and_shiftfix(&mut self, index: usize, element: Self::Element)
-    where Self::Element: MoveFix,
+    where
+        Self::Element: MoveFix,
     {
         self.insert(index, element);
         unsafe {
@@ -184,7 +179,8 @@ pub unsafe trait ListStorage: Sized {
     /// [`MoveFix`]: trait.MoveFix.html " "
     #[inline]
     fn remove_and_shiftfix(&mut self, index: usize) -> Self::Element
-    where Self::Element: MoveFix,
+    where
+        Self::Element: MoveFix,
     {
         let element = self.remove(index);
         unsafe {
@@ -275,7 +271,8 @@ pub trait MoveFix: Sized {
     /// # Safety
     /// This method can ***only*** be called by `fix_left_shift` and `fix_right_shift`. All safety implications of those methods apply.
     unsafe fn fix_shift<S>(storage: &mut S, shifted_from: usize, shifted_by: NonZeroIsize)
-    where S: ListStorage<Element = Self>;
+    where
+        S: ListStorage<Element = Self>;
     /// The hook to be called when an element in a collection gets moved from one location to another. `previous_index` represents its previous index before moving and is *not* guaranteed to be a valid index, `current_index` is its new index and is guaranteed to point towards a valid element.
     ///
     /// # Safety
@@ -283,7 +280,8 @@ pub trait MoveFix: Sized {
     ///
     /// [`SparseStorage`]: struct.SparseStorage.html " "
     unsafe fn fix_move<S>(storage: &mut S, previous_index: usize, current_index: usize)
-    where S: ListStorage<Element = Self>;
+    where
+        S: ListStorage<Element = Self>;
     /// The hook to be called when the items in the collection get shifted to the *left* due to a *removal*. `shifted_from` specifies the index from which the shift starts (first affected element), i.e. the index from which an item was removed.
     ///
     /// # Safety
@@ -293,7 +291,8 @@ pub trait MoveFix: Sized {
     /// Required to panic on integer overflow when converting the `shifted_by` into a `NonZeroIsize`.
     #[inline(always)]
     unsafe fn fix_left_shift<S>(storage: &mut S, shifted_from: usize, shifted_by: NonZeroUsize)
-    where S: ListStorage<Element = Self>,
+    where
+        S: ListStorage<Element = Self>,
     {
         Self::fix_shift(
             storage,
@@ -308,7 +307,8 @@ pub trait MoveFix: Sized {
     /// The implementor of this method may cause undefined behavior if the method was called erroneously and elements were not actually shifted.
     #[inline(always)]
     unsafe fn fix_right_shift<S>(storage: &mut S, shifted_from: usize, shifted_by: NonZeroUsize)
-    where S: ListStorage<Element = Self>,
+    where
+        S: ListStorage<Element = Self>,
     {
         Self::fix_shift(
             storage,
@@ -323,7 +323,7 @@ pub trait MoveFix: Sized {
 /// Annotated with `repr(transparent)`, so an `as` cast to the contained type will extract the value.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
-pub struct DummyMoveFix<T: ?Sized> (pub T);
+pub struct DummyMoveFix<T: ?Sized>(pub T);
 impl<T> DummyMoveFix<T> {
     /// Extracts the contained value.
     #[inline(always)]
@@ -336,10 +336,16 @@ impl<T> DummyMoveFix<T> {
 impl<T> MoveFix for DummyMoveFix<T> {
     #[inline(always)]
     unsafe fn fix_shift<S>(_: &mut S, _: usize, _: NonZeroIsize)
-    where S: ListStorage<Element = Self> {}
+    where
+        S: ListStorage<Element = Self>,
+    {
+    }
     #[inline(always)]
     unsafe fn fix_move<S>(_: &mut S, _: usize, _: usize)
-    where S: ListStorage<Element = Self> {}
+    where
+        S: ListStorage<Element = Self>,
+    {
+    }
 }
 impl<T> From<T> for DummyMoveFix<T> {
     #[inline(always)]
