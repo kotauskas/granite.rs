@@ -13,6 +13,8 @@ pub use sparse::{Vec as SparseVec, VecDeque as SparseVecDeque};
 use core::{
     num::{NonZeroUsize, NonZeroIsize},
     cmp::Ordering,
+    hint,
+    convert::TryFrom,
 };
 use super::Storage;
 
@@ -67,7 +69,6 @@ pub unsafe trait ListStorage: Sized {
     unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut Self::Element;
 
     /// Returns a reference to the specified element in the collection, or `None` if the index is out of bounds.
-    #[inline]
     fn get(&self, index: usize) -> Option<&Self::Element> {
         if self.len() > index {
             Some(unsafe {
@@ -79,7 +80,6 @@ pub unsafe trait ListStorage: Sized {
         }
     }
     /// Returns a *mutable* reference to the specified element in the collection, or `None` if the index is out of bounds.
-    #[inline]
     fn get_mut(&mut self, index: usize) -> Option<&mut Self::Element> {
         if self.len() > index {
             Some(unsafe {
@@ -93,23 +93,20 @@ pub unsafe trait ListStorage: Sized {
     /// Creates a new empty collection. Dynamically-allocated collections created this way do not allocate memory.
     ///
     /// Collections with fixed capacity should override this method to use the correct capacity, as the default implementation calls `Self::with_capacity(0)`.
-    #[inline(always)]
     fn new() -> Self {
         Self::with_capacity(0)
     }
     /// Returns `true` if the collection contains no elements, `false` otherwise.
-    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
     /// Appends an element to the back of the collection.
-    #[inline(always)]
     fn push(&mut self, element: Self::Element) {
         self.insert(self.len(), element)
     }
     /// Removes the last element from the collection and returns it, or `None` if it is empty.
-    #[inline]
     fn pop(&mut self) -> Option<Self::Element> {
+        #[allow(clippy::if_not_else)] // Makes more sense this way
         if !self.is_empty() {
             Some(self.remove(self.len() - 1))
         } else {
@@ -119,14 +116,12 @@ pub unsafe trait ListStorage: Sized {
     /// Returns the amount of elements the collection can hold without requiring a memory allocation.
     ///
     /// For collections which have a fixed capacity, this should be equal to the length; the default implementation uses exactly that.
-    #[inline(always)]
     fn capacity(&self) -> usize {
         self.len()
     }
     /// Reserves capacity for at least additional more elements to be inserted in the given collection. The collection may reserve more space to avoid frequent reallocations. After calling `reserve`, `capacity` will be greater than or equal to `self.len()` + `additional`. Does nothing if capacity is already sufficient.
     ///
     /// For collections which have a fixed capacity, this should first check for the specified amount of elements to reserve for and if it's not zero, either reallocate the collection anew or, if that is not supported, panic. The default implementation does exactly that.
-    #[inline(always)]
     fn reserve(&mut self, additional: usize) {
         if self.len() + additional > self.capacity() {
             unimplemented!("this storage type does not support reallocation")
@@ -137,7 +132,6 @@ pub unsafe trait ListStorage: Sized {
     /// It will drop down as close as possible to the current length, though dynamically allocated collections may not always reallocate exactly as much as it is needed to store all elements and none more.
     ///
     /// The default implementation does nothing.
-    #[inline(always)]
     fn shrink_to_fit(&mut self) {}
     /// Shortens the collection, keeping the first `len` elements and dropping the rest.
     ///
@@ -159,7 +153,6 @@ pub unsafe trait ListStorage: Sized {
     /// Same as `insert`.
     ///
     /// [`MoveFix`]: trait.MoveFix.html " "
-    #[inline]
     fn insert_and_shiftfix(&mut self, index: usize, element: Self::Element)
     where
         Self::Element: MoveFix,
@@ -177,7 +170,6 @@ pub unsafe trait ListStorage: Sized {
     /// Same as `remove`.
     ///
     /// [`MoveFix`]: trait.MoveFix.html " "
-    #[inline]
     fn remove_and_shiftfix(&mut self, index: usize) -> Self::Element
     where
         Self::Element: MoveFix,
@@ -192,7 +184,6 @@ pub unsafe trait ListStorage: Sized {
     /// Adds an element to the collection at an arbitrary index, returning that index. Will never shift elements around. The default implementation will call `push` and return the index of the element pushed.
     ///
     /// This method is used instead of `push` by data structures. It is overriden by `SparseStorage` with the use of a free-list for placing new elements in place of old holes.
-    #[inline(always)]
     fn add(&mut self, element: Self::Element) -> usize {
         self.push(element);
         self.len() - 1
@@ -206,55 +197,42 @@ where
     type Key = usize;
     type Element = E;
 
-    #[inline(always)]
     fn add(&mut self, element: Self::Element) -> usize {
         <Self as ListStorage>::add(self, element)
     }
-    #[inline(always)]
     fn remove(&mut self, index: &usize) -> Self::Element {
         <Self as ListStorage>::remove_and_shiftfix(self, *index)
     }
-    #[inline(always)]
     fn len(&self) -> usize {
         <Self as ListStorage>::len(self)
     }
-    #[inline(always)]
     fn with_capacity(capacity: usize) -> Self {
         <Self as ListStorage>::with_capacity(capacity)
     }
-    #[inline(always)]
     unsafe fn get_unchecked(&self, index: &usize) -> &Self::Element {
         <Self as ListStorage>::get_unchecked(self, *index)
     }
-    #[inline(always)]
     unsafe fn get_unchecked_mut(&mut self, index: &usize) -> &mut Self::Element {
         <Self as ListStorage>::get_unchecked_mut(self, *index)
     }
-    #[inline(always)]
     fn contains_key(&self, index: &usize) -> bool {
         <Self as ListStorage>::len(self) > *index
     }
-    #[inline(always)]
     fn get(&self, index: &usize) -> Option<&Self::Element> {
         <Self as ListStorage>::get(self, *index)
     }
-    #[inline(always)]
     fn get_mut(&mut self, index: &usize) -> Option<&mut Self::Element> {
         <Self as ListStorage>::get_mut(self, *index)
     }
-    #[inline(always)]
     fn new() -> Self {
         Self::with_capacity(0)
     }
-    #[inline(always)]
     fn capacity(&self) -> usize {
         <Self as ListStorage>::capacity(self)
     }
-    #[inline(always)]
     fn reserve(&mut self, additional: usize) {
         <Self as ListStorage>::reserve(self, additional)
     }
-    #[inline(always)]
     fn shrink_to_fit(&mut self) {
         <Self as ListStorage>::shrink_to_fit(self)
     }
@@ -289,7 +267,6 @@ pub trait MoveFix: Sized {
     ///
     /// # Panics
     /// Required to panic on integer overflow when converting the `shifted_by` into a `NonZeroIsize`.
-    #[inline(always)]
     unsafe fn fix_left_shift<S>(storage: &mut S, shifted_from: usize, shifted_by: NonZeroUsize)
     where
         S: ListStorage<Element = Self>,
@@ -297,15 +274,19 @@ pub trait MoveFix: Sized {
         Self::fix_shift(
             storage,
             shifted_from,
-            NonZeroIsize::new((shifted_by.get() as isize).wrapping_neg())
-                .expect("unexpected integer overflow"),
+            NonZeroIsize::new(
+                // SAFETY: there cannot be more than isize::MAX elements
+                isize::try_from(shifted_by.get())
+                    .unwrap_or_else(|_| hint::unreachable_unchecked())
+                    .wrapping_neg(),
+            )
+            .expect("unexpected integer overflow"),
         );
     }
     /// The hook to be called when the items in the collection get shifted to the *right* due to an *insertion*. `shifted_from` specifies the index from which the shift starts (first affected element), i.e. the index at which a new item was inserted.
     ///
     /// # Safety
     /// The implementor of this method may cause undefined behavior if the method was called erroneously and elements were not actually shifted.
-    #[inline(always)]
     unsafe fn fix_right_shift<S>(storage: &mut S, shifted_from: usize, shifted_by: NonZeroUsize)
     where
         S: ListStorage<Element = Self>,
@@ -313,7 +294,11 @@ pub trait MoveFix: Sized {
         Self::fix_shift(
             storage,
             shifted_from,
-            NonZeroIsize::new(shifted_by.get() as isize).expect("unexpected integer overflow"),
+            NonZeroIsize::new(
+                // SAFETY: there cannot be more than isize::MAX elements
+                isize::try_from(shifted_by.get()).unwrap_or_else(|_| hint::unreachable_unchecked()),
+            )
+            .expect("unexpected integer overflow"),
         );
     }
 }
@@ -326,7 +311,6 @@ pub trait MoveFix: Sized {
 pub struct DummyMoveFix<T: ?Sized>(pub T);
 impl<T> DummyMoveFix<T> {
     /// Extracts the contained value.
-    #[inline(always)]
     #[allow(clippy::missing_const_for_fn)] // *sigh* destructors
     pub fn into_inner(self) -> T {
         self.0
@@ -334,13 +318,11 @@ impl<T> DummyMoveFix<T> {
 }
 /// Dummy implementation, does nothing when notified.
 impl<T> MoveFix for DummyMoveFix<T> {
-    #[inline(always)]
     unsafe fn fix_shift<S>(_: &mut S, _: usize, _: NonZeroIsize)
     where
         S: ListStorage<Element = Self>,
     {
     }
-    #[inline(always)]
     unsafe fn fix_move<S>(_: &mut S, _: usize, _: usize)
     where
         S: ListStorage<Element = Self>,
@@ -348,19 +330,16 @@ impl<T> MoveFix for DummyMoveFix<T> {
     }
 }
 impl<T> From<T> for DummyMoveFix<T> {
-    #[inline(always)]
     fn from(op: T) -> Self {
         DummyMoveFix(op)
     }
 }
 impl<T: PartialEq + ?Sized> PartialEq<T> for DummyMoveFix<T> {
-    #[inline(always)]
     fn eq(&self, other: &T) -> bool {
         &self.0 == other
     }
 }
 impl<T: PartialOrd + ?Sized> PartialOrd<T> for DummyMoveFix<T> {
-    #[inline(always)]
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
         self.0.partial_cmp(other)
     }

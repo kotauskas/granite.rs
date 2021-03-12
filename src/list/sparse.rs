@@ -90,12 +90,10 @@ where
     S: ListStorage<Element = Slot<E>>,
 {
     /// Removes all holes from the sparse storage, *without fixing elements' indicies*. **This is an expensive operation and should only be called if `is_dense` is `false` to avoid needless overhead.**
-    #[inline(always)]
     pub fn defragment(&mut self) {
         self.defragment_impl(|_, _, _| {});
     }
     /// Removes all holes from the sparse storage, fixing elements' indicies. **This is an expensive operation and should only be called if `is_dense` is `false` to avoid needless overhead.**
-    #[inline(always)]
     pub fn defragment_and_fix(&mut self)
     where
         E: MoveFix,
@@ -151,17 +149,14 @@ where
         self.hole_list = None;
     }
     /// Consumes the sparse storage and returns its inner storage.
-    #[inline(always)]
     pub fn into_inner(self) -> S {
         self.storage
     }
     /// Returns the number of holes in the storage. This operation returns immediately instead of looping through the entire storage, since the sparse storage automatically tracks the number of holes it creates and destroys.
-    #[inline(always)]
     pub fn num_holes(&self) -> usize {
         self.hole_list.map_or(0, |x| x.0.get())
     }
     /// Returns `true` if there are no holes in the storage, `false` otherwise. This operation returns immediately instead of looping through the entire storage, since the sparse storage automatically tracks the number of holes it creates and destroys.
-    #[inline(always)]
     pub fn is_dense(&self) -> bool {
         self.num_holes() == 0
     }
@@ -218,19 +213,16 @@ where
 {
     type Element = E;
 
-    #[inline(always)]
     fn with_capacity(capacity: usize) -> Self {
         Self {
             storage: S::with_capacity(capacity),
             hole_list: None,
         }
     }
-    #[inline(always)]
     fn insert(&mut self, index: usize, element: Self::Element) {
         // Normal inserts ignore holes
         self.storage.insert(index, Slot::new_element(element))
     }
-    #[inline]
     fn remove(&mut self, index: usize) -> Self::Element {
         if self.is_dense() {
             self.storage.remove(index).unwrap()
@@ -242,12 +234,10 @@ defragment before doing this"
             )
         }
     }
-    #[inline(always)]
     fn len(&self) -> usize {
         self.storage.len()
     }
     // Will panic if a hole is encountered at the index.
-    #[inline]
     unsafe fn get_unchecked(&self, index: usize) -> &Self::Element {
         self.storage
             .get_unchecked(index)
@@ -255,7 +245,6 @@ defragment before doing this"
             .expect(HOLE_PANIC_MSG)
     }
     // Will panic if a hole is encountered at the index.
-    #[inline]
     unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut Self::Element {
         self.storage
             .get_unchecked_mut(index)
@@ -264,7 +253,6 @@ defragment before doing this"
     }
 
     // Will panic if a hole is encountered at the index.
-    #[inline]
     #[track_caller]
     fn get(&self, index: usize) -> Option<&Self::Element> {
         match self.storage.get(index) {
@@ -272,12 +260,11 @@ defragment before doing this"
                 // SAFETY: guarded match arm checks for holes
                 Some(x.element())
             },
-            Some(..) => panic!(HOLE_PANIC_MSG),
+            Some(..) => panic!("{}", HOLE_PANIC_MSG),
             None => None,
         }
     }
     // Will panic if a hole is encountered at the index.
-    #[inline]
     #[track_caller]
     fn get_mut(&mut self, index: usize) -> Option<&mut Self::Element> {
         match self.storage.get_mut(index) {
@@ -285,23 +272,20 @@ defragment before doing this"
                 // SAFETY: as above
                 Some(x.element_mut())
             },
-            Some(..) => panic!(HOLE_PANIC_MSG),
+            Some(..) => panic!("{}", HOLE_PANIC_MSG),
             None => None,
         }
     }
-    #[inline(always)]
     fn new() -> Self {
         Self {
             storage: S::new(),
             hole_list: None,
         }
     }
-    #[inline(always)]
     fn push(&mut self, element: Self::Element) {
         self.storage.push(Slot::new_element(element))
     }
     // Will panic if a hole is at the end of the storage.
-    #[inline]
     fn pop(&mut self) -> Option<Self::Element> {
         if self.is_dense() {
             self.storage.pop().map(Slot::unwrap)
@@ -313,19 +297,15 @@ defragment before doing this"
             )
         }
     }
-    #[inline(always)]
     fn capacity(&self) -> usize {
         self.storage.capacity()
     }
-    #[inline(always)]
     fn reserve(&mut self, additional: usize) {
         self.storage.reserve(additional)
     }
-    #[inline(always)]
     fn shrink_to_fit(&mut self) {
         self.storage.shrink_to_fit()
     }
-    #[inline(always)]
     fn truncate(&mut self, len: usize) {
         self.storage.truncate(len)
     }
@@ -341,7 +321,6 @@ defragment before doing this"
             Self::Element::fix_right_shift(self, index, super::U_ONE);
         }
     }
-    #[inline]
     #[track_caller]
     fn remove_and_shiftfix(&mut self, index: usize) -> Self::Element
     where
@@ -354,7 +333,6 @@ defragment before doing this"
         }
         .expect(HOLE_PANIC_MSG)
     }
-    #[inline]
     #[allow(clippy::option_if_let_else)] // I hate map_or_else
     fn add(&mut self, element: Self::Element) -> usize {
         if let Some(hole_info) = &mut self.hole_list {
@@ -442,24 +420,19 @@ defragment before doing this"
 #[derive(Debug)]
 pub struct Slot<T>(SlotInner<T>);
 impl<T> Slot<T> {
-    #[inline(always)]
     const fn new_element(val: T) -> Self {
         Self(SlotInner::new_element(val))
     }
     // Uncomment if ever needed
-    /*#[inline(always)]
-    const fn new_hole(val: Option<usize>) -> Self {
+    /*    const fn new_hole(val: Option<usize>) -> Self {
         Self (SlotInner::new_hole(val))
     }*/
-    #[inline(always)]
     const fn is_element(&self) -> bool {
         self.0.is_element()
     }
-    #[inline(always)]
     const fn is_hole(&self) -> bool {
         self.0.is_hole()
     }
-    #[inline(always)]
     unsafe fn element(&self) -> &T {
         self.0.element()
     }
@@ -473,7 +446,6 @@ impl<T> Slot<T> {
             None
         }
     }
-    #[inline(always)]
     unsafe fn element_mut(&mut self) -> &mut T {
         self.0.element_mut()
     }
@@ -487,15 +459,12 @@ impl<T> Slot<T> {
             None
         }
     }
-    #[inline(always)]
     unsafe fn hole_link(&self) -> Option<usize> {
         self.0.hole_link()
     }
-    #[inline(always)]
     unsafe fn set_hole_link(&mut self, val: Option<usize>) {
         self.0.set_hole_link(val)
     }
-    #[inline]
     #[track_caller]
     fn unwrap(self) -> T {
         if self.is_element() {
@@ -506,10 +475,9 @@ impl<T> Slot<T> {
             mem::forget(self);
             element_owned
         } else {
-            panic!(HOLE_PANIC_MSG)
+            panic!("{}", HOLE_PANIC_MSG)
         }
     }
-    #[inline(always)]
     fn punch_hole(&mut self, next: Option<usize>) -> Option<T> {
         self.0.punch_hole(next)
     }
@@ -534,7 +502,6 @@ impl<T> SlotUnionBased<T> {
     const UNION_DISCRIM_MASK: u8 = 0b0000_0001;
     const LINK_DISCRIM_MASK: u8 = 0b0000_0010;
 
-    #[inline(always)]
     const fn new_element(val: T) -> Self {
         Self {
             discrim: Self::ELEMENT_DISCRIM_BIT,
@@ -544,7 +511,6 @@ impl<T> SlotUnionBased<T> {
         }
     }
     // Uncomment if ever needed
-    #[inline(always)]
     #[allow(clippy::manual_unwrap_or)] // stupid clippy not realizing we're in a const fn
     const fn new_hole(val: Option<usize>) -> Self {
         Self {
@@ -559,23 +525,18 @@ impl<T> SlotUnionBased<T> {
             },
         }
     }
-    #[inline(always)]
     const fn is_element(&self) -> bool {
         self.discrim & Self::UNION_DISCRIM_MASK == Self::ELEMENT_DISCRIM_BIT
     }
-    #[inline(always)]
     const fn is_hole(&self) -> bool {
         self.discrim & Self::UNION_DISCRIM_MASK == Self::HOLE_DISCRIM_BIT
     }
-    #[inline(always)]
     unsafe fn element(&self) -> &T {
         &self.data.element
     }
-    #[inline(always)]
     unsafe fn element_mut(&mut self) -> &mut T {
         &mut self.data.element
     }
-    #[inline]
     unsafe fn hole_link(&self) -> Option<usize> {
         if self.discrim & Self::LINK_DISCRIM_MASK != 0 {
             Some(self.data.hole_link)
@@ -583,13 +544,11 @@ impl<T> SlotUnionBased<T> {
             None
         }
     }
-    #[inline(always)]
     unsafe fn set_hole_link(&mut self, val: Option<usize>) {
         let link_bit = (val.is_some() as u8) << 1;
         self.discrim = (self.discrim & Self::UNION_DISCRIM_MASK) | link_bit;
         self.data.hole_link = val.unwrap_or_default(); // Uninit integers are unsound
     }
-    #[inline]
     fn punch_hole(&mut self, next: Option<usize>) -> Option<T> {
         match self.discrim & Self::UNION_DISCRIM_MASK {
             Self::ELEMENT_DISCRIM_BIT => {
@@ -616,7 +575,6 @@ impl<T> SlotUnionBased<T> {
 }
 #[cfg(feature = "union_optimizations")]
 impl<T: Debug> Debug for SlotUnionBased<T> {
-    #[inline]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if self.is_element() {
             let element_ref = unsafe {
@@ -635,7 +593,6 @@ impl<T: Debug> Debug for SlotUnionBased<T> {
 }
 #[cfg(feature = "union_optimizations")]
 impl<T> Drop for SlotUnionBased<T> {
-    #[inline]
     fn drop(&mut self) {
         if self.is_element() {
             unsafe {
@@ -660,24 +617,19 @@ enum SlotEnumBased<T> {
 }
 #[cfg(not(feature = "union_optimizations"))]
 impl<T> SlotEnumBased<T> {
-    #[inline(always)]
     const fn new_element(val: T) -> Self {
         Self::Element(val)
     }
     // Uncomment if ever needed
-    /*#[inline(always)]
-    const fn new_hole(val: Option<usize>) -> Self {
+    /*    const fn new_hole(val: Option<usize>) -> Self {
         Self::Hole(val)
     }*/
-    #[inline(always)]
     const fn is_element(&self) -> bool {
         matches!(self, Self::Element(..))
     }
-    #[inline(always)]
     const fn is_hole(&self) -> bool {
         matches!(self, Self::Hole(..))
     }
-    #[inline(always)]
     #[allow(clippy::missing_const_for_fn)] // unreachable_unchecked isn't stable as const fn
     unsafe fn element(&self) -> &T {
         match self {
@@ -685,14 +637,12 @@ impl<T> SlotEnumBased<T> {
             Self::Hole(..) => hint::unreachable_unchecked(),
         }
     }
-    #[inline(always)]
     unsafe fn element_mut(&mut self) -> &mut T {
         match self {
             Self::Element(x) => x,
             Self::Hole(..) => hint::unreachable_unchecked(),
         }
     }
-    #[inline]
     #[allow(clippy::missing_const_for_fn)] // unreachable_unchecked isn't stable as const fn
     unsafe fn hole_link(&self) -> Option<usize> {
         match self {
@@ -700,7 +650,6 @@ impl<T> SlotEnumBased<T> {
             Self::Element(..) => hint::unreachable_unchecked(),
         }
     }
-    #[inline(always)]
     unsafe fn set_hole_link(&mut self, val: Option<usize>) {
         match self {
             Self::Hole(x) => {

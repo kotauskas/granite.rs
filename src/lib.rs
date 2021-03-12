@@ -50,69 +50,15 @@
     //missing_doc_code_examples,
     unused_qualifications,
     variant_size_differences,
-    clippy::cast_lossless,
-    clippy::await_holding_lock,
-    clippy::checked_conversions,
-    clippy::copy_iterator,
-    clippy::expl_impl_clone_on_copy,
-    clippy::explicit_iter_loop,
-    clippy::explicit_into_iter_loop,
-    clippy::filter_map,
-    clippy::filter_map_next,
-    clippy::find_map,
-    clippy::map_flatten,
-    clippy::map_unwrap_or,
-    clippy::fn_params_excessive_bools,
-    clippy::implicit_hasher,
-    clippy::implicit_saturating_sub,
-    clippy::inefficient_to_string,
-    clippy::invalid_upcast_comparisons,
-    clippy::items_after_statements,
-    clippy::large_stack_arrays,
-    clippy::let_unit_value,
-    clippy::macro_use_imports,
-    clippy::match_same_arms,
-    clippy::match_wild_err_arm,
-    clippy::match_wildcard_for_single_variants,
-    // sick of this stupid lint, disabling
-    // clippy::module_name_repetitions,
-    clippy::mut_mut,
-    clippy::needless_continue,
-    clippy::needless_pass_by_value,
-    clippy::option_if_let_else,
-    clippy::option_option,
-    clippy::pub_enum_variant_names,
-    clippy::range_plus_one,
-    clippy::range_minus_one,
-    clippy::redundant_closure_for_method_calls,
-    clippy::same_functions_in_if_condition,
-    // also sick of this one, gives too much false positives inherent to its design
-    // clippy::shadow_unrelated,
-    clippy::similar_names,
-    clippy::single_match_else,
-    clippy::string_add_assign,
-    clippy::too_many_lines,
-    clippy::type_repetition_in_bounds,
-    clippy::trivially_copy_pass_by_ref,
-    clippy::unicode_not_nfc,
-    clippy::unnested_or_patterns,
-    clippy::unsafe_derive_deserialize,
-    clippy::unused_self,
-    clippy::used_underscore_binding,
-    clippy::clone_on_ref_ptr,
-    clippy::dbg_macro,
-    clippy::decimal_literal_representation,
-    clippy::filetype_is_file,
-    clippy::get_unwrap,
-    clippy::rest_pat_in_fully_bound_structs,
-    clippy::unneeded_field_pattern,
+    clippy::pedantic,
     clippy::unwrap_used, // Only .expect() allowed
-    clippy::use_debug,
-    clippy::verbose_file_reads,
-    clippy::wrong_pub_self_convention,
 )]
 #![deny(anonymous_parameters, bare_trait_objects)]
-#![allow(clippy::use_self)] // Broken
+#![allow(
+    clippy::use_self,
+    clippy::must_use_candidate,
+    clippy::module_name_repetitions
+)]
 #![no_std]
 #![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 
@@ -180,7 +126,6 @@ pub unsafe trait Storage: Sized {
     fn contains_key(&self, key: &Self::Key) -> bool;
 
     /// Returns a reference to the specified element in the collection, or `None` if the key is not present in the storage.
-    #[inline]
     fn get(&self, key: &Self::Key) -> Option<&Self::Element> {
         if self.contains_key(key) {
             Some(unsafe {
@@ -192,7 +137,6 @@ pub unsafe trait Storage: Sized {
         }
     }
     /// Returns a *mutable* reference to the specified element in the collection, or `None` if the key is not present in the storage.
-    #[inline]
     fn get_mut(&mut self, key: &Self::Key) -> Option<&mut Self::Element> {
         if self.contains_key(key) {
             Some(unsafe {
@@ -206,27 +150,23 @@ pub unsafe trait Storage: Sized {
     /// Creates a new empty storage. Dynamically-allocated storages created this way do not allocate memory.
     ///
     /// Storages with fixed capacity should override this method to use the correct capacity, as the default implementation calls `Self::with_capacity(0)`.
-    #[inline(always)]
     fn new() -> Self {
         Self::with_capacity(0)
     }
 
     /// Returns `true` if the storage contains no elements, `false` otherwise.
-    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
     /// Returns the amount of elements the storage can hold without requiring a memory allocation.
     ///
     /// For storages which have a fixed capacity, this should be equal to the length; the default implementation uses exactly that.
-    #[inline(always)]
     fn capacity(&self) -> usize {
         self.len()
     }
     /// Reserves capacity for at least additional more elements to be inserted in the given storage. The storage may reserve more space to avoid frequent reallocations. After calling `reserve`, `capacity` will be greater than or equal to `self.len()` + `additional`. Does nothing if capacity is already sufficient.
     ///
     /// For storages which have a fixed capacity, this should first check for the specified amount of elements to reserve for and if it's not zero, either reallocate the collection anew or, if that is not supported, panic. The default implementation does exactly that.
-    #[inline(always)]
     fn reserve(&mut self, additional: usize) {
         if self.len() + additional > self.capacity() {
             unimplemented!("this storage type does not support reallocation")
@@ -237,7 +177,6 @@ pub unsafe trait Storage: Sized {
     /// It will drop down as close as possible to the current length, though dynamically allocated storages may not always reallocate exactly as much as it is needed to store all elements and none more.
     ///
     /// The default implementation does nothing.
-    #[inline(always)]
     fn shrink_to_fit(&mut self) {}
 }
 
