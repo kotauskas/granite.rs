@@ -538,6 +538,7 @@ impl<T> SlotUnionBased<T> {
         &mut self.data.element
     }
     unsafe fn hole_link(&self) -> Option<usize> {
+        #[allow(clippy::if_not_else)] // Makes more sense this way
         if self.discrim & Self::LINK_DISCRIM_MASK != 0 {
             Some(self.data.hole_link)
         } else {
