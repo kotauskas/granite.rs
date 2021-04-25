@@ -6,12 +6,12 @@ where
     A: Array,
 {
     type Element = A::Item;
+    const CAPACITY: Option<usize> = Some(A::CAPACITY);
 
     fn with_capacity(capacity: usize) -> Self {
-        assert_eq!(
-            capacity,
-            A::CAPACITY,
-            "specified capacity does not match the underlying array's size",
+        assert!(
+            capacity <= A::CAPACITY,
+            "requested capacity is bigger than the underlying array size"
         );
         Self::new()
     }
