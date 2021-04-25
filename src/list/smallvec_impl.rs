@@ -1,10 +1,8 @@
 use smallvec::{SmallVec, Array};
-use super::ListStorage;
+use core::slice;
+use crate::{ListStorage, IntoRefIterator, IntoMutIterator};
 
-unsafe impl<A> ListStorage for SmallVec<A>
-where
-    A: Array,
-{
+unsafe impl<A: Array> ListStorage for SmallVec<A> {
     type Element = A::Item;
 
     fn with_capacity(capacity: usize) -> Self {
@@ -52,5 +50,25 @@ where
     }
     fn truncate(&mut self, len: usize) {
         self.truncate(len)
+    }
+}
+impl<'a, A: Array> IntoRefIterator<'a> for SmallVec<A>
+where
+    A::Item: 'a,
+{
+    type Item = A::Item;
+    type Iter = slice::Iter<'a, A::Item>;
+    fn iter(&'a self) -> Self::Iter {
+        self.as_slice().iter()
+    }
+}
+impl<'a, A: Array> IntoMutIterator<'a> for SmallVec<A>
+where
+    A::Item: 'a,
+{
+    type Item = A::Item;
+    type IterMut = slice::IterMut<'a, A::Item>;
+    fn iter_mut(&'a mut self) -> Self::IterMut {
+        self.as_mut_slice().iter_mut()
     }
 }

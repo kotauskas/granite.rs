@@ -1,6 +1,9 @@
-use core::hint;
-use alloc::{vec::Vec, collections::VecDeque};
-use super::ListStorage;
+use core::{hint, slice};
+use alloc::{
+    vec::Vec,
+    collections::vec_deque::{self, VecDeque},
+};
+use crate::{IntoMutIterator, IntoRefIterator, ListStorage};
 
 unsafe impl<T> ListStorage for Vec<T> {
     type Element = T;
@@ -50,6 +53,20 @@ unsafe impl<T> ListStorage for Vec<T> {
     }
     fn truncate(&mut self, len: usize) {
         self.truncate(len)
+    }
+}
+impl<'a, T: 'a> IntoRefIterator<'a> for Vec<T> {
+    type Item = T;
+    type Iter = slice::Iter<'a, T>;
+    fn iter(&'a self) -> Self::Iter {
+        (&self[..]).iter()
+    }
+}
+impl<'a, T: 'a> IntoMutIterator<'a> for Vec<T> {
+    type Item = T;
+    type IterMut = slice::IterMut<'a, T>;
+    fn iter_mut(&'a mut self) -> Self::IterMut {
+        (&mut self[..]).iter_mut()
     }
 }
 
@@ -102,6 +119,20 @@ unsafe impl<T> ListStorage for VecDeque<T> {
     }
     fn truncate(&mut self, len: usize) {
         self.truncate(len)
+    }
+}
+impl<'a, T: 'a> IntoRefIterator<'a> for VecDeque<T> {
+    type Item = T;
+    type Iter = vec_deque::Iter<'a, T>;
+    fn iter(&'a self) -> Self::Iter {
+        self.iter()
+    }
+}
+impl<'a, T: 'a> IntoMutIterator<'a> for VecDeque<T> {
+    type Item = T;
+    type IterMut = vec_deque::IterMut<'a, T>;
+    fn iter_mut(&'a mut self) -> Self::IterMut {
+        self.iter_mut()
     }
 }
 

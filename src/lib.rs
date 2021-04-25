@@ -68,6 +68,9 @@ extern crate alloc;
 mod list;
 pub use list::*;
 
+mod iter;
+pub use iter::*;
+
 #[cfg(feature = "slab")]
 mod slab_impl;
 #[cfg(feature = "slotmap")]
@@ -85,16 +88,22 @@ use core::fmt::Debug;
 /// - Calling [`get_unchecked`] or [`get_unchecked_mut`] if `contains_key` on the same key returns `true` should *not* cause undefined behavior (otherwise, it may or may not — that is implementation specific);
 /// - Calling `remove` if `contains_key` on the same key should *never* panic or only perform an aborting panic (i.e. not allowing unwinding), as that might leave the data structure in an invalid state during some operations;
 /// - If an element is added at a key, it must be retrieveable in the exact same state as it was inserted until it is removed or modified using a method which explicitly does so.
+/// - If [`CAPACITY`] is `Some(...)`, the [`capacity`] method is **required** to return its value.
 ///
 /// Data structures may rely on those invariants for safety.
 ///
 /// [`get_unchecked`]: #method.get_unchecked " "
 /// [`get_unchecked_mut`]: #method.get_unchecked_mut " "
+/// [`capacity`]: #method.capacity " "
+/// [`CAPACITY`]: #associatedconstant.CAPACITY " "
 pub unsafe trait Storage: Sized {
     /// The type used for element naming.
     type Key: Clone + Debug + Eq;
     /// The type of the elements stored.
     type Element;
+
+    /// The fixed capacity, for statically allocated storages. Storages like `SmallVec` should set this to `None`, since going above this limit is generally assumed to panic.
+    const CAPACITY: Option<usize> = None;
 
     /// Adds an element to the collection with an unspecified key, returning that key.
     fn add(&mut self, element: Self::Element) -> Self::Key;
@@ -105,10 +114,12 @@ pub unsafe trait Storage: Sized {
     fn remove(&mut self, key: &Self::Key) -> Self::Element;
     /// Returns the number of elements in the storage, also referred to as its 'length'.
     fn len(&self) -> usize;
-    /// Creates an empty storage with the specified capacity.
+    /// Creates an empty collection with the specified capacity.
     ///
     /// # Panics
-    /// Storages with a fixed capacity should panic if the specified capacity does not match their actual one, and are recommended to override the `new` method to use the correct capacity.
+    /// Collections with a fixed capacity should panic if the specified capacity is bigger than their actual one. Collections which use the heap are allowed to panic if an allocation cannot be performed, though using the [OOM abort mechanism] is also allowed.
+    ///
+    /// [OOM abort mechanism]: https://doc.rust-lang.org/std/alloc/fn.handle_alloc_error.html " "
     fn with_capacity(capacity: usize) -> Self;
     /// Returns a reference to the specified element in the storage, without checking for presence of the key inside the collection.
     ///
@@ -149,7 +160,7 @@ pub unsafe trait Storage: Sized {
     }
     /// Creates a new empty storage. Dynamically-allocated storages created this way do not allocate memory.
     ///
-    /// Storages with fixed capacity should override this method to use the correct capacity, as the default implementation calls `Self::with_capacity(0)`.
+    /// The default implementation calls `Self::with_capacity(0)`, which usually doesn't allocate for heap-based storages.
     fn new() -> Self {
         Self::with_capacity(0)
     }
@@ -158,9 +169,10 @@ pub unsafe trait Storage: Sized {
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    /// Returns the amount of elements the storage can hold without requiring a memory allocation.
+    /// Returns the amount of elements the collection can hold without requiring a memory allocation.
     ///
-    /// For storages which have a fixed capacity, this should be equal to the length; the default implementation uses exactly that.
+    /// The default implementation uses the current length. Implementors are heavily encouraged to override the default behavior.
+    // TODO make mandatory to implement in the next major version bump
     fn capacity(&self) -> usize {
         self.len()
     }
