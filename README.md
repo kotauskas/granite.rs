@@ -16,6 +16,7 @@ Enter arena-allocated data structures: a way to have data structures backed by `
 Unlike smart pointer data structures, arena allocated data structures do not store any pointers. Instead, they store keys. A key is an identifier of an element within the backing storage, unique in the scope of one instance of the backing storage. Keys may overlap between multiple storages and between an element which existed at some point but has been removed, but they may not overlap among elements coexisting in one point of time in one collection.
 
 ## Public dependencies
+- `tinyvec` — `^1.2`
 - `arrayvec` — `^0.5`
 - `smallvec` — `^1.4`
 - `slab` — `^0.4`
@@ -25,16 +26,20 @@ PRs are welcome from those interested in those version numbers being modified.
 
 ## Feature flags
 - `alloc` (**enabled by default**) — enables support for [`Vec`] and [`VecDeque`] from the standard library, while keeping the crate `no_std`. Requires a functional global allocator, though only at runtime and not at compile time.
-- `arrayvec` — enables support for [`ArrayVec`].
-- `smallvec` — enables support for [`SmallVec`].
+- `tinyvec` — enables support for [`ArrayVec`][TinyArrayVec], [`SliceVec`] and [`TinyVec`] from the `tinyvec` crate, often preferred over `arrayvec` and `smallvec`.
+- `arrayvec` — enables support for [`ArrayVec`][ArrayVec0]. **You probably should use `tinyvec` instead.**
+- `smallvec` — enables support for [`SmallVec`]. **You probably should use `tinyvec` instead.**
 - `slab` — enables support for [`Slab`].
-- `slotmap` — enables support for [`SlotMap`], [`HopSlotMap`] and [`DenseSlotMap`]. [`Slab`] will likely be faster because it's not versioned, so this is disabled by default.
+- `slotmap` — enables support for [`SlotMap`], [`HopSlotMap`] and [`DenseSlotMap`]. *[`Slab`] will likely be faster because it's not versioned; this feature is largely here for compatibility.*
 - `union_optimizations` — forwarded to Granite, adds some layout optimizations by using untagged unions, decreasing memory usage in `SparseStorage`. **Requires a nightly compiler** (see [tracking issue for RFC 2514]) and thus is disabled by default.
 
 [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html " "
 [`VecDeque`]: https://doc.rust-lang.org/std/collections/struct.VecDeque.html " "
 [`SmallVec`]: https://docs.rs/smallvec/*/smallvec/struct.SmallVec.html " "
-[`ArrayVec`]: https://docs.rs/arrayvec/*/arrayvec/struct.ArrayVec.html " "
+[ArrayVec0]: https://docs.rs/arrayvec/*/arrayvec/struct.ArrayVec.html " "
+[TinyArrayVec]: https://docs.rs/tinyvec/*/tinyvec/struct.ArrayVec.html " "
+[`TinyVec`]: https://docs.rs/tinyvec/*/tinyvec/enum.TinyVec.html " "
+[`TinyVec`]: https://docs.rs/tinyvec/*/tinyvec/struct.SliceVec.html " "
 [`SlotMap`]: https://docs.rs/slotmap/*/slotmap/struct.SlotMap.html " "
 [`HopSlotMap`]: https://docs.rs/slotmap/*/slotmap/hop/struct.HopSlotMap.html " "
 [`DenseSlotMap`]: https://docs.rs/slotmap/*/slotmap/dense/struct.DenseSlotMap.html " "

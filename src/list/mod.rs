@@ -4,6 +4,8 @@ mod alloc_impl;
 mod arrayvec_impl;
 #[cfg(feature = "smallvec")]
 mod smallvec_impl;
+#[cfg(feature = "tinyvec")]
+mod tinyvec_impl;
 
 mod sparse;
 pub use sparse::{SparseStorage, Slot as SparseStorageSlot};
@@ -16,6 +18,8 @@ use core::{
     hint,
     convert::TryFrom,
 };
+use crate::{IntoMutIterator, IntoRefIterator};
+
 use super::Storage;
 
 const U_ONE: NonZeroUsize = unsafe { NonZeroUsize::new_unchecked(1) };
@@ -30,20 +34,27 @@ const U_ONE: NonZeroUsize = unsafe { NonZeroUsize::new_unchecked(1) };
 /// - Calling [`get_unchecked`] or [`get_unchecked_mut`] with `self.len() > index` should *not* cause undefined behavior (otherwise, it may or may not — that is implementation specific);
 /// - `insert_and_fix`/`remove_and_fix` call unsafe methods from [`MoveFix`], meaning that `insert` and `remove` must be implemented according to the contract of the methods of that trait;
 /// - If an element is added at a position, it must be retrieveable in the exact same state as it was inserted until it is removed or modified using a method which explicitly does so.
+/// - If [`CAPACITY`] is `Some(...)`, the [`capacity`] method is **required** to return its value.
 ///
 /// Data structures may rely on those invariants for safety.
 ///
 /// [`get_unchecked`]: #method.get_unchecked " "
 /// [`get_unchecked_mut`]: #method.get_unchecked_mut " "
-/// [`MoveFix`]: trait.MoveFix.html " "
+/// [`capacity`]: #method.capacity " "
+/// [`CAPACITY`]: #associatedconstant.CAPACITY " "
 pub unsafe trait ListStorage: Sized {
     /// The type of values in the container.
     type Element;
 
+    /// The fixed capacity, for statically allocated storages. Storages like `SmallVec` should set this to `None`, since going above this limit is generally assumed to panic.
+    const CAPACITY: Option<usize> = None;
+
     /// Creates an empty collection with the specified capacity.
     ///
     /// # Panics
-    /// Collections with a fixed capacity should panic if the specified capacity does not match their actual one, and are recommended to override the `new` method to use the correct capacity.
+    /// Collections with a fixed capacity should panic if the specified capacity is bigger than their actual one. Collections which use the heap are allowed to panic if an allocation cannot be performed, though using the [OOM abort mechanism] is also allowed.
+    ///
+    /// [OOM abort mechanism]: https://doc.rust-lang.org/std/alloc/fn.handle_alloc_error.html " "
     fn with_capacity(capacity: usize) -> Self;
     /// Inserts an element at position `index` within the collection, shifting all elements after it to the right.
     ///
@@ -92,7 +103,7 @@ pub unsafe trait ListStorage: Sized {
     }
     /// Creates a new empty collection. Dynamically-allocated collections created this way do not allocate memory.
     ///
-    /// Collections with fixed capacity should override this method to use the correct capacity, as the default implementation calls `Self::with_capacity(0)`.
+    /// The default implementation calls `Self::with_capacity(0)`, which usually doesn't allocate for heap-based storages.
     fn new() -> Self {
         Self::with_capacity(0)
     }
@@ -115,7 +126,8 @@ pub unsafe trait ListStorage: Sized {
     }
     /// Returns the amount of elements the collection can hold without requiring a memory allocation.
     ///
-    /// For collections which have a fixed capacity, this should be equal to the length; the default implementation uses exactly that.
+    /// The default implementation uses the current length. Implementors are heavily encouraged to override the default behavior.
+    // TODO make mandatory to implement in the next major version bump
     fn capacity(&self) -> usize {
         self.len()
     }
@@ -196,6 +208,7 @@ where
 {
     type Key = usize;
     type Element = E;
+    const CAPACITY: Option<usize> = <Self as ListStorage>::CAPACITY;
 
     fn add(&mut self, element: Self::Element) -> usize {
         <Self as ListStorage>::add(self, element)
@@ -236,6 +249,22 @@ where
     fn shrink_to_fit(&mut self) {
         <Self as ListStorage>::shrink_to_fit(self)
     }
+}
+
+/// Trait alias for list-like containers which support indexing, addition and removal of elements and iteration.
+///
+/// This is automatically implemented for any type implementing [`ListStorage`] and HRTB-bounded [`IntoRefIterator`] and [`IntoMutIterator`].
+pub trait List:
+    ListStorage
+    + for<'a> IntoRefIterator<'a, Item = <Self as ListStorage>::Element>
+    + for<'a> IntoMutIterator<'a, Item = <Self as ListStorage>::Element>
+{
+}
+impl<T> List for T where
+    T: ListStorage
+        + for<'a> IntoRefIterator<'a, Item = <Self as ListStorage>::Element>
+        + for<'a> IntoMutIterator<'a, Item = <Self as ListStorage>::Element>
+{
 }
 
 /// Trait for data structure element types to be able to correct indices towards other elements when they are moved around in the collection.
