@@ -9,6 +9,8 @@ mod tinyvec_impl;
 
 mod sparse;
 pub use sparse::{SparseStorage, Slot as SparseStorageSlot};
+pub mod chain;
+pub use chain::Chain;
 #[cfg(feature = "alloc")]
 pub use sparse::{Vec as SparseVec, VecDeque as SparseVecDeque};
 
