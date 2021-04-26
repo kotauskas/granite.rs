@@ -5,7 +5,9 @@ use core::{
 use crate::{List, IntoRefIterator, IntoMutIterator};
 
 /// An iterator over the storages of a [`Chain`].
-pub struct Iter<'a, S: List + 'a, I: List<Element = S>>(<I as IntoRefIterator<'a>>::Iter);
+pub struct Iter<'a, S: List + 'a, I: List<Element = S>>(
+    pub(super) <I as IntoRefIterator<'a>>::Iter,
+);
 impl<'a, S: List, I: List<Element = S>> Iterator for Iter<'a, S, I> {
     type Item = StorageProxy<'a, S>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -57,7 +59,9 @@ where
 }
 
 /// An mutable iterator over the storages of a [`Chain`].
-pub struct IterMut<'a, S: List + 'a, I: List<Element = S>>(<I as IntoMutIterator<'a>>::IterMut);
+pub struct IterMut<'a, S: List + 'a, I: List<Element = S>>(
+    pub(super) <I as IntoMutIterator<'a>>::IterMut,
+);
 impl<'a, S: List, I: List<Element = S>> Iterator for IterMut<'a, S, I> {
     type Item = StorageProxyMut<'a, S>;
     fn next(&mut self) -> Option<Self::Item> {

@@ -44,6 +44,21 @@ where
     };
     const DEFAULT_ALLOCATE_TO_LIMIT: bool = true;
 
+    /// Creates an iterator over references to the storages of the chain.
+    ///
+    /// This allows for efficient iteration over the elements of a chain, especially if the index collection type (the list which contains the individual sub-lists) is a linked list or any other data structure with O(n) indexing. However, this requires an explicit nested loop, since creating an iterator struct which would flatten iterators into one contiguous iteration sequence is impossible, because that would require modelling a self-referential struct with lifetimes, which isn't currently possible.
+    ///
+    /// Also, the iterator doesn't actually iterate over references to storages: it iterates over [*proxies*](StorageProxy) instead, which are wrappers around references to storages with the sole purpose of making all other trait implementations and methods inaccessible to make sure the chain upholds the `ListStorage` safety contract in the presence of interior mutability in the used storage type.
+    pub fn iter(&self) -> Iter<'_, S, I> {
+        Iter(self.contents.iter())
+    }
+    /// Creates an iterator over mutable references to the storages of the chain.
+    ///
+    /// This is the same as [`iter`] — so keep all considerations which apply to it in mind — but the [proxies](StorageProxyMut) wrap mutable references and not immutable ones.
+    pub fn iter_mut(&mut self) -> IterMut<'_, S, I> {
+        IterMut(self.contents.iter_mut())
+    }
+
     /// Sets the limit (**in elements, not bytes**) to which a buffer will be used before an additional allocation will be performed.
     ///
     /// The limit must be even, i.e. a multiple of 2, due to how the limit is stored internally. Check out the source code if you're curious.
