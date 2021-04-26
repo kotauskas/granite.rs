@@ -39,7 +39,7 @@ PRs are welcome from those interested in those version numbers being modified.
 [ArrayVec0]: https://docs.rs/arrayvec/*/arrayvec/struct.ArrayVec.html " "
 [TinyArrayVec]: https://docs.rs/tinyvec/*/tinyvec/struct.ArrayVec.html " "
 [`TinyVec`]: https://docs.rs/tinyvec/*/tinyvec/enum.TinyVec.html " "
-[`TinyVec`]: https://docs.rs/tinyvec/*/tinyvec/struct.SliceVec.html " "
+[`SliceVec`]: https://docs.rs/tinyvec/*/tinyvec/struct.SliceVec.html " "
 [`SlotMap`]: https://docs.rs/slotmap/*/slotmap/struct.SlotMap.html " "
 [`HopSlotMap`]: https://docs.rs/slotmap/*/slotmap/hop/struct.HopSlotMap.html " "
 [`DenseSlotMap`]: https://docs.rs/slotmap/*/slotmap/dense/struct.DenseSlotMap.html " "
